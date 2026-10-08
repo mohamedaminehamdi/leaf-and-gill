@@ -23,7 +23,8 @@
     "Veratrum": "False hellebore is highly toxic and resembles wild garlic and gentian.",
     "Toxicodendron": "Poison ivy, oak and sumac cause severe skin reactions on contact.",
     "Heracleum": "Giant hogweed sap causes severe burns in sunlight.",
-    "Inosperma": "Many species (formerly Inocybe) contain dangerous levels of muscarine."
+    "Inosperma": "Many species (formerly Inocybe) contain dangerous levels of muscarine.",
+    "Aethusa": "Fool's parsley is poisonous and looks like parsley and coriander."
   },
   "must_include": [
     "Amanita phalloides",
@@ -58,6 +59,7 @@
     "Veratrum viride",
     "Toxicodendron radicans",
     "Toxicodendron diversilobum",
-    "Heracleum mantegazzianum"
+    "Heracleum mantegazzianum",
+    "Aethusa cynapium"
   ]
 }

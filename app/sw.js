@@ -1,11 +1,11 @@
 // Offline shell: everything the app needs except the model (app.js caches that itself).
-const SHELL = 'leaf-and-gill-shell-v1';
+const SHELL = 'leaf-and-gill-shell-v2';
 const FILES = [
   './', 'index.html', 'app.js', 'manifest.webmanifest',
   'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',
   'vendor/ort/ort.webgpu.min.mjs', 'vendor/ort/ort-wasm-simd-threaded.asyncify.mjs', 'vendor/ort/ort-wasm-simd-threaded.asyncify.wasm',
   'data/species.json', 'data/meta.json', 'data/danger.json', 'data/text_emb.f16',
-  'data/lookalikes.json', 'data/about.json', 'data/trust.json',
+  'data/lookalikes.json', 'data/about.json', 'data/trust.json', 'data/confused_with.json',
 ];
 
 self.addEventListener('install', (event) => {

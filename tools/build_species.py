@@ -6,6 +6,7 @@ Per-species lookups are cached in cache/gbif/ so reruns are cheap.
 """
 import argparse
 import json
+import re
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -16,6 +17,7 @@ GBIF = "https://api.gbif.org/v1"
 KINGDOMS = {"plants": 6, "fungi": 5}
 RANKS = ("kingdom", "phylum", "class", "order", "family", "genus")
 CACHE = Path("cache/gbif")
+EDIBILITY = re.compile(r"\b(edible|safe to eat|tasty|delicious|good to eat)\b", re.I)
 session = requests.Session()
 session.headers["User-Agent"] = "leaf-and-gill/0.1 (https://github.com/mohamedaminehamdi/leaf-and-gill)"
 
@@ -50,6 +52,7 @@ def cached_get(name, url):
 def english_name(key):
     names = cached_get(f"{key}-vernacular", f"{GBIF}/species/{key}/vernacularNames?limit=100")["results"]
     english = [n["vernacularName"].split(",")[0].strip().capitalize() for n in names if n.get("language") == "eng"]
+    english = [n for n in english if not EDIBILITY.search(n)]  # "Edible banana" -> next most agreed name
     # The name most sources agree on ("Stinging nettle"), not the first one listed ("California nettle").
     return Counter(english).most_common(1)[0][0] if english else ""
 
