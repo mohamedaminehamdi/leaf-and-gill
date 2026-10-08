@@ -1,0 +1,20 @@
+[project]
+name = "leaf-and-gill"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.12"
+dependencies = [
+    "huggingface-hub>=2.1.1",
+    "numpy>=2.5.3",
+    "onnx>=1.23.2",
+    "onnxruntime>=1.30.0",
+    "open-clip-torch>=3.3.0",
+    "pillow>=12.3.0",
+    "requests>=2.34.2",
+    "torch>=2.14.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
