@@ -16,7 +16,7 @@ import requests
 
 DATA, CACHE = Path("app/data"), Path("cache/wiki")
 API = "https://en.wikipedia.org/api/rest_v1/page/summary/"
-FOOD = re.compile(r"\b(edib\w*|eat\w*|eaten|culinar\w*|cook\w*|cuisine|food\w*|delica\w*|tast\w*|flavou?r\w*|recipe\w*|forag\w*)\b", re.I)
+FOOD = re.compile(r"\b(edib\w*|eat\w*|eaten|culinar\w*|cook\w*|cuisine|food\w*|delica\w*|delici\w*|tast\w*|flavou?r\w*|recipe\w*|forag\w*)\b", re.I)
 SENTENCE = re.compile(r"(?<=[.!?])\s+(?=[A-Z])")
 session = requests.Session()
 session.headers["User-Agent"] = "leaf-and-gill/0.1 (https://github.com/mohamedaminehamdi/leaf-and-gill)"
