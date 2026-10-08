@@ -7,6 +7,7 @@ Cached in cache/wiki/ so reruns are cheap.
 """
 import json
 import re
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from urllib.parse import quote
@@ -25,10 +26,17 @@ def summary(name):
     path = CACHE / f"{name.replace(' ', '_')}.json"
     if path.exists():
         return json.loads(path.read_text())
-    r = session.get(API + quote(name.replace(" ", "_")), timeout=60)
-    data = r.json() if r.ok else {}
-    path.write_text(json.dumps(data))
-    return data
+    for attempt in range(6):
+        r = session.get(API + quote(name.replace(" ", "_")), timeout=60)
+        if r.status_code == 404:  # no article: remember that, it won't change
+            path.write_text("{}")
+            return {}
+        if r.ok:
+            path.write_text(r.text)
+            return r.json()
+        # Rate limited or a server hiccup: back off and try again; never cache a failure.
+        time.sleep(float(r.headers.get("retry-after", 2 ** attempt)))
+    return {}
 
 
 def safe_text(extract, limit=320):
@@ -55,7 +63,7 @@ def about(s):
 def main():
     species = json.loads((DATA / "species.json").read_text())
     CACHE.mkdir(parents=True, exist_ok=True)
-    with ThreadPoolExecutor(8) as pool:
+    with ThreadPoolExecutor(4) as pool:
         entries = list(pool.map(about, species))
     out = {str(i): e for i, e in enumerate(entries) if e}
     (DATA / "about.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")))

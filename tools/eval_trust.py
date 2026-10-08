@@ -6,7 +6,7 @@ Steps (each step is cached in cache/eval/, so reruns skip work already done):
   2. embed every photo with BioCLIP 2 (same weights as the ONNX file; parity is checked in export_model.py)
   3. score against the shipped pack exactly like app.js does (top-5 softmax)
   4. TabPFN learns P(top-1 is right) from (top-1 probability, margin, kingdom); compared with a plain threshold
-Writes app/data/trust.json (a grid the phone looks up offline), app/data/confused_with.json and metrics.md.
+Writes app/data/trust.json (a 3-D grid per kingdom the phone looks up offline), app/data/confused_with.json and metrics.md.
 """
 import argparse
 import io
@@ -20,11 +20,12 @@ import open_clip
 import requests
 import torch
 from PIL import Image
+from sklearn.metrics import roc_auc_score
 
 DATA, EVAL = Path("app/data"), Path("cache/eval")
 INAT = "https://api.inaturalist.org/v1/observations"
 SINCE = "2025-06-01"
-GRID = np.linspace(0, 1, 41)
+STEPS = 21  # grid resolution per axis; the phone interpolates between points
 session = requests.Session()
 session.headers["User-Agent"] = "leaf-and-gill/0.1 (https://github.com/mohamedaminehamdi/leaf-and-gill)"
 
@@ -97,17 +98,20 @@ def embed(paths, batch=32):
 
 
 def score(img_emb, text_emb, logit_scale):
-    logits = logit_scale * img_emb @ text_emb.T
+    """Exactly what app.js computes: top-5 softmax probabilities and their cosine similarities."""
+    cos = img_emb @ text_emb.T
+    logits = logit_scale * cos
     logits -= logits.max(axis=1, keepdims=True)
     probs = np.exp(logits)
     probs /= probs.sum(axis=1, keepdims=True)
     top = np.argsort(-probs, axis=1)[:, :5]
-    return top, np.take_along_axis(probs, top, axis=1)
+    return top, np.take_along_axis(probs, top, axis=1), np.take_along_axis(cos, top, axis=1)
 
 
-def features(top_probs, top_kingdom_is_fungi):
+def features(top_probs, top_cos, top_kingdom_is_fungi):
+    """Top-1 probability, its lead over the runner-up, how close the photo is to the best name at all, kingdom."""
     p1, p2 = top_probs[:, 0], top_probs[:, 1]
-    return np.column_stack([p1, p1 - p2, top_kingdom_is_fungi]).astype(np.float32)
+    return np.column_stack([p1, p1 - p2, top_cos[:, 0], top_kingdom_is_fungi]).astype(np.float32)
 
 
 # ---------- 4. trust meter ----------
@@ -119,6 +123,11 @@ def tabpfn_classifier():
         return TabPFNClassifier.create_default_for_version(ModelVersion.V2)
     except (ImportError, AttributeError):
         return TabPFNClassifier()
+
+
+def precision_at(p, y, coverage=0.4):
+    k = int(coverage * len(p))
+    return float(y[np.argsort(-p)[:k]].mean())
 
 
 def brier(p, y):
@@ -152,14 +161,14 @@ def main():
     print(f"{len(obs)} fresh photos ({sum(o['kingdom'] == 'Fungi' for o in obs)} fungi), since {SINCE}")
 
     img_emb = embed(paths)
-    top, top_probs = score(img_emb, text_emb, meta["logit_scale"])
+    top, top_probs, top_cos = score(img_emb, text_emb, meta["logit_scale"])
     truth = np.array([index.get(o["name"], -1) for o in obs])
     in_pack = truth >= 0
     correct = (top[:, 0] == truth).astype(int)
     top5 = np.array([t in row for t, row in zip(truth, top)])
     genus_ok = np.array([species[row[0]]["genus"] == o["name"].split()[0] for row, o in zip(top, obs)])
     fungi = np.array([species[row[0]]["kingdom"] == "Fungi" for row in top], dtype=np.float32)
-    X = features(top_probs, fungi)
+    X = features(top_probs, top_cos, fungi)
 
     rng = np.random.default_rng(0)
     test = rng.random(len(obs)) < 0.4
@@ -174,10 +183,14 @@ def main():
     likely_at = 0.5
     raw_at = next((t for t in np.linspace(0.5, 0.999, 100) if confident_report(X[~test, 0], correct[~test], t)["precision"] >= 0.95), 0.999)
 
-    grid = np.array([[a, b, k] for k in (0, 1) for a in GRID for b in GRID], dtype=np.float32)
-    grid_p = clf.predict_proba(grid)[:, 1].reshape(2, len(GRID), len(GRID))
+    # Precompute TabPFN on a grid so the phone can look it up offline (trilinear interpolation in app.js).
+    p_axis = np.linspace(0, 1, STEPS)
+    cos_axis = np.linspace(np.percentile(X[:, 2], 0.5), np.percentile(X[:, 2], 99.5), STEPS)
+    grid = np.array([[a, b, c, k] for k in (0, 1) for a in p_axis for b in p_axis for c in cos_axis], dtype=np.float32)
+    grid_p = clf.predict_proba(grid)[:, 1].reshape(2, STEPS, STEPS, STEPS)
     (DATA / "trust.json").write_text(json.dumps({
-        "axis": GRID.round(3).tolist(), "confident": round(float(confident_at), 3), "likely": likely_at,
+        "p": p_axis.round(4).tolist(), "cos": cos_axis.round(4).tolist(),
+        "confident": round(float(confident_at), 3), "likely": likely_at,
         "plants": grid_p[0].round(3).tolist(), "fungi": grid_p[1].round(3).tolist()}, separators=(",", ":")))
 
     # Real mix-ups: wrong top-1 where the right answer was in the pack.
@@ -213,10 +226,15 @@ def main():
         "",
         "| | Raw model score | TabPFN trust meter |",
         "|---|---|---|",
+        f"| Separates right from wrong (AUROC, higher is better) | {roc_auc_score(correct[test], p_raw):.3f} | {roc_auc_score(correct[test], p_tabpfn):.3f} |",
         f"| Brier score (lower is better) | {brier(p_raw, correct[test]):.3f} | {brier(p_tabpfn, correct[test]):.3f} |",
+        f"| Right answers among the 40% most trusted | {precision_at(p_raw, correct[test]):.1%} | {precision_at(p_tabpfn, correct[test]):.1%} |",
         f"| Answers shown as Confident | {raw['coverage']:.1%} | {tab['coverage']:.1%} |",
         f"| Confident answers that were right | {raw['precision']:.1%} | {tab['precision']:.1%} |",
         f"| Wrong answers shown as Confident | {raw['wrong_shown_confident']} | {tab['wrong_shown_confident']} |",
+        "",
+        f"Overall, {correct.mean():.1%} of all photos (including species outside the pack) got the right species as the top match. "
+        f"Features: top-1 probability, its margin over the runner-up, top-1 cosine similarity, kingdom.",
         "",
         f"Both cut-offs were chosen on the training split to keep Confident answers at least 95% right "
         f"(raw score >= {raw_at:.3f}, TabPFN >= {confident_at:.3f}).",

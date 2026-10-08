@@ -1,5 +1,5 @@
 // Offline shell: everything the app needs except the model (app.js caches that itself).
-const SHELL = 'leaf-and-gill-shell-v2';
+const SHELL = 'leaf-and-gill-shell-v3';
 const FILES = [
   './', 'index.html', 'app.js', 'manifest.webmanifest',
   'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',

@@ -143,19 +143,31 @@ function dangerFor(matches, pack) {
 
 // ---------- trust, cards, life list ----------
 
+function axisPos(axis, v) {
+  // Position of v on an evenly spaced axis: [lower grid index, fraction towards the next one].
+  const n = axis.length, x = Math.min(n - 1, Math.max(0, ((v - axis[0]) / (axis[n - 1] - axis[0])) * (n - 1)));
+  const i = Math.min(n - 2, Math.floor(x));
+  return [i, x - i];
+}
+
 function trustFor(matches, pack) {
-  // TabPFN learned P(top-1 is right) from (top-1 probability, margin, kingdom); we look it up offline.
+  // TabPFN learned P(top-1 is right) from (top-1 probability, margin, top-1 similarity, kingdom) on fresh
+  // iNaturalist photos. Its predictions ship as a grid; we interpolate between grid points offline.
   const t = pack.trust;
   if (!t) return null;
-  const step = t.axis[1] - t.axis[0], at = (v) => Math.min(t.axis.length - 1, Math.max(0, Math.round(v / step)));
-  const grid = pack.species[matches[0].i].kingdom === 'Fungi' ? t.fungi : t.plants;
-  const p = grid[at(matches[0].p)][at(matches[0].p - matches[1].p)];
+  const top = matches[0];
+  const grid = pack.species[top.i].kingdom === 'Fungi' ? t.fungi : t.plants;
+  const [a, ta] = axisPos(t.p, top.p), [b, tb] = axisPos(t.p, top.p - matches[1].p), [c, tc] = axisPos(t.cos, top.cos);
+  let p = 0;
+  for (const [da, wa] of [[0, 1 - ta], [1, ta]])
+    for (const [db, wb] of [[0, 1 - tb], [1, tb]])
+      for (const [dc, wc] of [[0, 1 - tc], [1, tc]]) p += wa * wb * wc * grid[a + da][b + db][c + dc];
   const level = p >= t.confident ? 'confident' : p >= t.likely ? 'likely' : 'unsure';
   return { p, level };
 }
 
 const TRUST_TEXT = {
-  confident: ['Confident', 'Usually right in testing. Still check the features below.'],
+  confident: ['Very likely', 'Right about 9 times in 10 in testing. Still check the features below.'],
   likely: ['Likely', 'Often right, but compare it with the other matches.'],
   unsure: ['Not sure', 'Compare these possibilities. Look closer or try another angle.'],
 };
