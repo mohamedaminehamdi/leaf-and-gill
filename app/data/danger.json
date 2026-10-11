@@ -24,7 +24,10 @@
     "Toxicodendron": "Poison ivy, oak and sumac cause severe skin reactions on contact.",
     "Heracleum": "Giant hogweed sap causes severe burns in sunlight.",
     "Inosperma": "Many species (formerly Inocybe) contain dangerous levels of muscarine.",
-    "Aethusa": "Fool's parsley is poisonous and looks like parsley and coriander."
+    "Aethusa": "Fool's parsley is poisonous and looks like parsley and coriander.",
+    "Convallaria": "Lily of the valley contains heart toxins. Its leaves look like wild garlic.",
+    "Colchicum": "Autumn crocus is deadly. Its leaves look like wild garlic.",
+    "Arum": "Lords-and-ladies is toxic. Its young leaves grow among wild garlic."
   },
   "must_include": [
     "Amanita phalloides",
@@ -60,6 +63,9 @@
     "Toxicodendron radicans",
     "Toxicodendron diversilobum",
     "Heracleum mantegazzianum",
-    "Aethusa cynapium"
+    "Aethusa cynapium",
+    "Convallaria majalis",
+    "Colchicum autumnale",
+    "Arum maculatum"
   ]
 }

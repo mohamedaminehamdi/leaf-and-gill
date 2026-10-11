@@ -3,7 +3,7 @@
 Usage: uv run tools/build_embeddings.py
 Reads app/data/species.json, writes:
   app/data/text_emb.f16       N x 768 little-endian float16, L2-normalized, same order as species.json
-  app/data/lookalikes.json    for each species, the 3 nearest species of the same kingdom (indices)
+  app/data/lookalikes.json    for each species, the 10 nearest species of the same kingdom, other genus (indices)
   app/data/meta.json          embedding size, species count, the model's logit scale
 """
 import json
@@ -23,14 +23,19 @@ def label(s):
     return f"a photo of {taxonomy} with common name {s['common']}." if s["common"] else f"a photo of {taxonomy}."
 
 
-def lookalikes(emb, kingdoms, k=3):
-    """Nearest species of the same kingdom by cosine similarity of the text embeddings."""
+def lookalikes(emb, species, k=10):
+    """For each species, the k most similar species of the same kingdom but a different genus.
+
+    Cross-genus look-alikes are the dangerous ones (wild carrot -> poison hemlock, morel -> false morel);
+    close relatives are already covered by the top-5 list.
+    """
+    kingdoms = np.array([s["kingdom"] for s in species])
+    genera = np.array([s["genus"] for s in species])
     out = []
     for start in range(0, len(emb), 1024):
         sims = emb[start:start + 1024] @ emb.T
         for row, i in enumerate(range(start, min(start + 1024, len(emb)))):
-            sims[row, i] = -1
-            sims[row, kingdoms != kingdoms[i]] = -1
+            sims[row, (kingdoms != kingdoms[i]) | (genera == genera[i])] = -1
         out += np.argsort(-sims, axis=1)[:, :k].tolist()
     return out
 
@@ -47,8 +52,7 @@ def main():
             chunks.append(torch.nn.functional.normalize(model.encode_text(tokens), dim=-1).float().cpu().numpy())
     emb = np.concatenate(chunks)
     emb.astype("<f2").tofile(DATA / "text_emb.f16")
-    kingdoms = np.array([s["kingdom"] for s in species])
-    (DATA / "lookalikes.json").write_text(json.dumps(lookalikes(emb, kingdoms), separators=(",", ":")))
+    (DATA / "lookalikes.json").write_text(json.dumps(lookalikes(emb, species), separators=(",", ":")))
     meta = {"dim": int(emb.shape[1]), "count": len(species), "logit_scale": round(float(model.logit_scale.exp()), 4)}
     (DATA / "meta.json").write_text(json.dumps(meta))
     print(f"{len(species)} species -> text_emb.f16 ({emb.shape[1]}-d, {emb.nbytes / 2e6:.1f} MB) + lookalikes.json")

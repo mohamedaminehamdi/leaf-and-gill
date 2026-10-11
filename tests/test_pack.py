@@ -17,12 +17,12 @@ def test_embeddings_line_up_with_species():
     assert np.allclose(np.linalg.norm(emb.astype(np.float32), axis=1), 1, atol=1e-2)
 
 
-def test_lookalikes_are_other_species_of_the_same_kingdom():
+def test_lookalikes_are_other_genera_of_the_same_kingdom():
     lookalikes = json.loads((DATA / "lookalikes.json").read_text())
     assert len(lookalikes) == len(species)
     for i, near in enumerate(lookalikes):
-        assert i not in near
         assert all(species[j]["kingdom"] == species[i]["kingdom"] for j in near)
+        assert all(species[j]["genus"] != species[i]["genus"] for j in near)
 
 
 def test_every_deadly_species_is_in_the_pack_and_flagged():
@@ -37,3 +37,19 @@ def test_no_edibility_claims_anywhere():
     for path in DATA.glob("*.json"):
         text = path.read_text()
         assert not claim.search(text), f"{path.name} mentions edibility: {claim.search(text).group(0)}"
+
+
+def test_classic_deadly_mixups_raise_the_alarm():
+    """If the top match is one of these, the app must warn about the deadly look-alike (via lookalikes.json)."""
+    lookalikes = json.loads((DATA / "lookalikes.json").read_text())
+    index = {s["name"]: i for i, s in enumerate(species)}
+    cases = {
+        "Daucus carota": "Conium",           # wild carrot -> poison hemlock
+        "Coriandrum sativum": "Conium",      # coriander -> poison hemlock
+        "Morchella esculenta": "Gyromitra",  # morel -> false morel
+        "Allium ursinum": None,              # wild garlic -> lily of the valley / autumn crocus / arum
+    }
+    for name, genus in cases.items():
+        near = {species[j]["genus"] for j in lookalikes[index[name]]}
+        flagged = near & set(danger["genera"])
+        assert flagged if genus is None else genus in flagged, f"{name}: no warning ({sorted(near)})"

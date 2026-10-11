@@ -137,7 +137,7 @@ function dangerFor(matches, pack) {
     if (pack.danger.genera[genus] && !hits.has(genus)) hits.set(genus, { why: pack.danger.genera[genus], via });
   };
   matches.forEach((m) => flag(m.i, null));
-  matches.slice(0, 3).forEach((m) => confusedWith(pack, m.i).forEach((j) => flag(j, pack.species[m.i])));
+  matches.slice(0, 3).forEach((m) => confusedWith(pack, m.i, Infinity).forEach((j) => flag(j, pack.species[m.i])));
   return [...hits];
 }
 
@@ -177,10 +177,11 @@ function nameOf(pack, i) {
   return `${esc(s.common || s.name)}${pack.danger.genera[s.genus] ? ' <em class="tag">TOXIC</em>' : ''}`;
 }
 
-function confusedWith(pack, i) {
+function confusedWith(pack, i, limit = 3) {
+  // Real mix-ups measured on test photos first, then the model's nearest species from other genera.
   const real = pack.confused?.[i] || [];
   const near = pack.lookalikes?.[i] || [];
-  return [...new Set([...real, ...near])].filter((j) => j !== i).slice(0, 3);
+  return [...new Set([...real, ...near])].filter((j) => j !== i).slice(0, limit);
 }
 
 function card(pack, m, open) {

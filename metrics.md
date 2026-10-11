@@ -12,13 +12,13 @@ Fresh iNaturalist research-grade photos observed since 2025-06-01 (after BioCLIP
 
 | | Raw model score | TabPFN trust meter |
 |---|---|---|
-| Separates right from wrong (AUROC, higher is better) | 0.817 | 0.844 |
+| Separates right from wrong (AUROC, higher is better) | 0.817 | 0.843 |
 | Brier score (lower is better) | 0.167 | 0.148 |
 | Right answers among the 40% most trusted | 89.5% | 90.8% |
-| Answers shown as Confident | 1.1% | 23.0% |
-| Confident answers that were right | 92.3% | 91.4% |
-| Wrong answers shown as Confident | 1 | 24 |
+| Answers shown as "Very likely" | 1.1% | 23.6% |
+| "Very likely" answers that were right | 92.3% | 92.4% |
+| Wrong answers shown as "Very likely" | 1 | 22 |
 
 Overall, 66.4% of all photos (including species outside the pack) got the right species as the top match. Features: top-1 probability, its margin over the runner-up, top-1 cosine similarity, kingdom.
 
-Both cut-offs were chosen on the training split to keep Confident answers at least 95% right (raw score >= 0.999, TabPFN >= 0.930).
+Both cut-offs were chosen on the training split to keep "Very likely" answers at least 95% right (raw score >= 0.999, TabPFN >= 0.930).
