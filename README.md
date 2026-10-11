@@ -9,7 +9,7 @@ The model is downloaded once (~600 MB, like offline maps) and works in airplane 
 
 | Snap | Deadly look-alikes | Honest uncertainty |
 |---|---|---|
-| ![Start screen](docs/start.png) | ![Poison hemlock with danger warnings](docs/result-hemlock.png) | ![Chanterelle marked Not sure](docs/result-chanterelle.png) |
+| ![Home screen](docs/app-home.png) | ![Poison hemlock with danger warnings](docs/app-hemlock.png) | ![Chanterelle with a jack-o'-lantern warning](docs/app-chanterelle.png) |
 
 ## What it does
 
