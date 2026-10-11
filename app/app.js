@@ -147,7 +147,7 @@ function dangerFor(matches, pack) {
   };
   matches.forEach((m) => flag(m.i, null));
   matches.slice(0, 3).forEach((m) => confusedWith(pack, m.i, Infinity).forEach((j) => flag(j, pack.species[m.i])));
-  return [...hits];
+  return [...hits].slice(0, 3);  // direct matches first; more than three warnings stop being read
 }
 
 // ---------- trust, cards, life list ----------
