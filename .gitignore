@@ -5,3 +5,4 @@ __pycache__/
 cache/
 *.onnx
 .env
+DEV_POST.md

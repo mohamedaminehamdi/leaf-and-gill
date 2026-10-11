@@ -138,16 +138,19 @@ function topMatches(embedding, pack, k = 5) {
 }
 
 function dangerFor(matches, pack) {
-  // A toxic genus anywhere in the top 5, or among the known look-alikes of the top 3, raises the alarm:
-  // "coriander" from a photo of poison hemlock must still warn about hemlock.
+  // Up to three warnings, most reliable first:
+  // 1. a toxic genus among the top 5 matches,
+  // 2. a classic field-guide pair for the top 3 (chanterelle -> jack-o'-lantern),
+  // 3. a toxic species among the model's own look-alikes of the top 3 (coriander -> poison hemlock).
   const hits = new Map();
-  const flag = (i, via) => {
-    const genus = pack.species[i].genus;
+  const add = (genus, via) => {
     if (pack.danger.genera[genus] && !hits.has(genus)) hits.set(genus, { why: pack.danger.genera[genus], via });
   };
-  matches.forEach((m) => flag(m.i, null));
-  matches.slice(0, 3).forEach((m) => confusedWith(pack, m.i, Infinity).forEach((j) => flag(j, pack.species[m.i])));
-  return [...hits].slice(0, 3);  // direct matches first; more than three warnings stop being read
+  const top3 = matches.slice(0, 3).map((m) => pack.species[m.i]);
+  matches.forEach((m) => add(pack.species[m.i].genus, null));
+  top3.forEach((s) => (pack.danger.known_lookalikes?.[s.genus] || []).forEach((g) => add(g, s)));
+  matches.slice(0, 3).forEach((m) => confusedWith(pack, m.i, Infinity).forEach((j) => add(pack.species[j].genus, pack.species[m.i])));
+  return [...hits].slice(0, 3);  // more than three warnings stop being read
 }
 
 // ---------- trust, cards, life list ----------
@@ -193,16 +196,20 @@ function confusedWith(pack, i, limit = 3) {
   return [...new Set([...real, ...near])].filter((j) => j !== i).slice(0, limit);
 }
 
-function card(pack, m, open) {
-  const s = pack.species[m.i], about = pack.about?.[m.i], pct = Math.round(m.p * 100);
-  const deadly = pack.danger.genera[s.genus] ? '<em class="tag">TOXIC GENUS</em>' : '';
-  const lookalikes = confusedWith(pack, m.i).map((j) => nameOf(pack, j)).join(', ');
-  return `<li class="match"><details ${open ? 'open' : ''}>
-    <summary><span><b>${esc(s.common || s.name)}</b>${deadly}<span class="sci">${esc(s.name)} · ${esc(s.family)}</span></span>
-      <span class="pct">${pct}%</span><span class="bar"><i style="width:${Math.max(2, pct)}%"></i></span></summary>
-    ${about ? `<p class="about">${esc(about.text)} <a href="${esc(about.url)}" target="_blank" rel="noopener">From Wikipedia</a>, CC BY-SA 4.0.</p>` : ''}
-    ${lookalikes ? `<p class="look"><b>Often confused with:</b> ${lookalikes}</p>` : ''}
-  </details></li>`;
+function details(pack, i) {
+  const about = pack.about?.[i];
+  const lookalikes = confusedWith(pack, i).map((j) => nameOf(pack, j)).join(', ');
+  return `${about ? `<p class="about">${esc(about.text)} <a href="${esc(about.url)}" target="_blank" rel="noopener">Wikipedia</a> · CC BY-SA</p>` : ''}
+    ${lookalikes ? `<p class="look"><span>Often confused with</span> ${lookalikes}</p>` : ''}`;
+}
+
+function row(pack, m) {
+  const s = pack.species[m.i], pct = Math.round(m.p * 100);
+  const deadly = pack.danger.genera[s.genus] ? ' <em class="tag">TOXIC</em>' : '';
+  return `<li><details><summary>
+      <span class="name"><b>${esc(s.common || s.name)}</b>${deadly}<span class="sci">${esc(s.name)}</span></span>
+      <span class="pct">${pct}%</span><span class="bar"><i style="width:${Math.max(2, pct)}%"></i></span>
+    </summary>${details(pack, m.i)}</details></li>`;
 }
 
 const LIST_KEY = 'leaf-and-gill-finds';
@@ -218,8 +225,8 @@ async function thumbnail(file) {
 
 function renderFinds() {
   const list = finds();
-  $('finds').innerHTML = list.length ? `<details class="card"><summary><b>My finds</b> · ${list.length} saved on this phone</summary>
-    <ul class="finds">${list.map((f) => `<li><img src="${f.thumb}" alt="" width="48" height="48"><span><b>${esc(f.common || f.name)}</b>
+  $('finds').innerHTML = list.length ? `<details class="panel"><summary><b>My finds</b><span>${list.length} saved on this phone</span></summary>
+    <ul class="finds">${list.map((f) => `<li><img src="${f.thumb}" alt="" width="44" height="44"><span><b>${esc(f.common || f.name)}</b>
       <span class="sci">${esc(f.name)} · ${esc(new Date(f.at).toLocaleDateString())}</span></span></li>`).join('')}</ul>
     <button type="button" class="ghost" id="clear-finds">Clear list</button></details>` : '';
   $('clear-finds')?.addEventListener('click', () => {
@@ -232,15 +239,24 @@ function render(file, matches, pack, ms, ep) {
   const danger = dangerFor(matches, pack);
   const trust = trustFor(matches, pack);
   const [label, hint] = trust ? TRUST_TEXT[trust.level] : ['', ''];
+  const deadly = pack.danger.genera[top.genus] ? '<em class="tag">TOXIC GENUS</em>' : '';
   $('result').innerHTML = `
-    ${danger.length ? `<div class="banner danger" role="alert">Dangerous look-alikes in these matches
-      ${danger.map(([g, { why, via }]) => `<p><b>${esc(g)}</b>${via ? ` (often confused with ${esc(via.common || via.name)})` : ''}: ${esc(why)}</p>`).join('')}</div>` : ''}
-    ${top.kingdom === 'Fungi' ? `<div class="banner warn">Never eat a wild mushroom based on an app.<p>If someone has eaten one and feels unwell, call your local poison centre or emergency number now.</p></div>` : ''}
-    <div class="card"><img class="photo" src="${URL.createObjectURL(file)}" alt="Your photo">
-      ${trust ? `<div class="trust ${trust.level}"><b>${label}</b> · ${Math.round(trust.p * 100)}% likely right<span>${hint}</span></div>` : ''}
-      <ol class="matches">${matches.map((m, k) => card(pack, m, k === 0)).join('')}</ol>
-      <button type="button" class="ghost" id="save">Save “${esc(top.common || top.name)}” to my finds</button>
-      <div class="meta">Identified on this device in ${ms} ms (${ep === 'webgpu' ? 'GPU' : 'CPU'}) · ${pack.species.length.toLocaleString()} species</div></div>`;
+    ${danger.length ? `<div class="banner danger" role="alert"><b>Dangerous look-alikes</b>
+      ${danger.map(([g, { why, via }]) => `<p><strong>${esc(g)}</strong>${via ? ` <span>(looks like ${esc(via.common || via.name)})</span>` : ''}: ${esc(why)}</p>`).join('')}</div>` : ''}
+    ${top.kingdom === 'Fungi' ? `<div class="banner warn"><b>Never eat a wild mushroom based on an app.</b><p>If someone has eaten one and feels unwell, call your local poison centre or emergency number now.</p></div>` : ''}
+    <article class="hero-card">
+      <img class="photo" src="${URL.createObjectURL(file)}" alt="Your photo">
+      <div class="hero-body">
+        <div class="eyebrow">Top match · ${Math.round(matches[0].p * 100)}% model score</div>
+        <h2>${esc(top.common || top.name)}</h2>
+        <p class="sci">${esc(top.name)} · ${esc(top.family)} ${deadly}</p>
+        ${trust ? `<div class="trust ${trust.level}"><i></i><span><b>${label}</b> · ${Math.round(trust.p * 100)}% likely right<small>${hint}</small></span></div>` : ''}
+        ${details(pack, matches[0].i)}
+      </div>
+    </article>
+    <section class="panel"><h3>Other possibilities</h3><ol class="others">${matches.slice(1).map((m) => row(pack, m)).join('')}</ol></section>
+    <button type="button" class="ghost" id="save">Save “${esc(top.common || top.name)}” to my finds</button>
+    <p class="meta">Identified on this device in ${ms} ms (${ep === 'webgpu' ? 'GPU' : 'CPU'}) · ${pack.species.length.toLocaleString()} species · no photo uploaded</p>`;
   $('save').addEventListener('click', async (ev) => {
     const list = finds();
     list.unshift({ name: top.name, common: top.common, at: Date.now(), thumb: await thumbnail(file) });
@@ -249,51 +265,68 @@ function render(file, matches, pack, ms, ep) {
     ev.target.disabled = true;
     renderFinds();
   });
+  $('result').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
 
 // ---------- boot ----------
 
+function setReady(ready) {
+  document.querySelectorAll('[data-needs-model]').forEach((el) => {
+    el.setAttribute('aria-disabled', String(!ready));
+    if (el.tagName === 'BUTTON') el.disabled = !ready;
+  });
+}
+
+function setup(seen, total) {
+  const pct = total ? Math.round((100 * seen) / total) : 0;
+  $('setup-bar').style.width = `${pct}%`;
+  $('setup-text').textContent = total ? `${Math.round(seen / 1e6)} of ${Math.round(total / 1e6)} MB · ${pct}%` : `${Math.round(seen / 1e6)} MB`;
+  $('mode').textContent = `Setting up ${pct}%`;
+}
+
 async function main() {
   let pack, session, ep, offline;
+  setReady(false);
   try {
-    status('Loading species list…');
+    $('setup-text').textContent = 'Loading the species list…';
     pack = await loadPack();
-    status('Preparing the model (one-time download, then it works offline)…<br><progress id="dl" max="1" value="0"></progress>');
     await navigator.storage?.persist?.();
     let bytes;
-    ({ bytes, offline } = await modelBytes((seen, total) => {
-      const bar = $('dl');
-      if (bar && total) bar.value = seen / total;
-      $('mode').textContent = total ? `Downloading ${Math.round((100 * seen) / total)}%` : `Downloading ${Math.round(seen / 1e6)} MB`;
-    }));
-    status('Starting the model…');
+    ({ bytes, offline } = await modelBytes(setup));
+    $('setup-text').textContent = 'Starting the model…';
     ({ session, ep } = await createSession(bytes));
   } catch (err) {
-    status(`<b>Couldn't start:</b> ${esc(err.message)}`);
+    $('setup').innerHTML = `<b>Couldn't start</b><p>${esc(err.message)}</p>`;
     $('mode').textContent = 'Error';
     return;
   }
+  $('setup').hidden = true;
   $('mode').textContent = offline ? 'Ready offline' : 'Ready (online only)';
   $('mode').classList.toggle('ok', offline);
-  $('snap').setAttribute('aria-disabled', 'false');
+  setReady(true);
   renderFinds();
   status(offline ? '' : 'Not enough free storage to save the model for offline use. It works now, but needs signal next time.');
 
-  $('camera').addEventListener('change', async (ev) => {
-    const file = ev.target.files[0];
-    if (!file) return;
+  async function identify(file) {
     status('Looking closely…');
     const bitmap = await createImageBitmap(file);
     const t0 = performance.now();
     const input = new ort.Tensor('float32', pixels(bitmap), [1, 3, SIZE, SIZE]);
     const out = await session.run({ [session.inputNames[0]]: input });
-    const embedding = out[session.outputNames[0]].data;
-    const matches = topMatches(embedding, pack);
+    const matches = topMatches(out[session.outputNames[0]].data, pack);
     const ms = Math.round(performance.now() - t0);
     status('');
     render(file, matches, pack, ms, ep);
+  }
+
+  $('camera').addEventListener('change', async (ev) => {
+    if (ev.target.files[0]) await identify(ev.target.files[0]);
     ev.target.value = '';
   });
+  document.querySelectorAll('[data-example]').forEach((btn) => btn.addEventListener('click', async () => {
+    const blob = await (await fetch(btn.dataset.example)).blob();
+    await identify(new File([blob], btn.dataset.example.split('/').pop(), { type: blob.type }));
+  }));
 }
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');

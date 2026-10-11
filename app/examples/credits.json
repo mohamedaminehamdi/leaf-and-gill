@@ -1,0 +1,30 @@
+[
+ {
+  "file": "flyagaric.jpg",
+  "species": "Amanita muscaria",
+  "attribution": "no rights reserved",
+  "license": "cc0",
+  "url": "https://www.inaturalist.org/observations/407623729"
+ },
+ {
+  "file": "hemlock.jpg",
+  "species": "Conium maculatum",
+  "attribution": "(c) pedrogarabaya, some rights reserved (CC BY)",
+  "license": "cc-by",
+  "url": "https://www.inaturalist.org/observations/405908318"
+ },
+ {
+  "file": "chanterelle.jpg",
+  "species": "Cantharellus cibarius",
+  "attribution": "(c) Michel Langeveld, some rights reserved (CC BY)",
+  "license": "cc-by",
+  "url": "https://www.inaturalist.org/observations/407255526"
+ },
+ {
+  "file": "dandelion.jpg",
+  "species": "Taraxacum officinale",
+  "attribution": "(c) Álvaro Ibaceta R., some rights reserved (CC BY)",
+  "license": "cc-by",
+  "url": "https://www.inaturalist.org/observations/407030292"
+ }
+]

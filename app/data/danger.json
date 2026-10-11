@@ -67,5 +67,98 @@
     "Convallaria majalis",
     "Colchicum autumnale",
     "Arum maculatum"
-  ]
+  ],
+  "known_lookalikes": {
+    "Cantharellus": [
+      "Omphalotus"
+    ],
+    "Craterellus": [
+      "Omphalotus"
+    ],
+    "Hygrophoropsis": [
+      "Omphalotus"
+    ],
+    "Agaricus": [
+      "Amanita"
+    ],
+    "Lycoperdon": [
+      "Amanita"
+    ],
+    "Calvatia": [
+      "Amanita"
+    ],
+    "Volvariella": [
+      "Amanita"
+    ],
+    "Macrolepiota": [
+      "Amanita",
+      "Lepiota"
+    ],
+    "Russula": [
+      "Amanita"
+    ],
+    "Tricholoma": [
+      "Amanita"
+    ],
+    "Armillaria": [
+      "Galerina"
+    ],
+    "Kuehneromyces": [
+      "Galerina"
+    ],
+    "Pholiota": [
+      "Galerina"
+    ],
+    "Psilocybe": [
+      "Galerina"
+    ],
+    "Morchella": [
+      "Gyromitra"
+    ],
+    "Clitopilus": [
+      "Clitocybe"
+    ],
+    "Daucus": [
+      "Conium",
+      "Cicuta",
+      "Oenanthe"
+    ],
+    "Pastinaca": [
+      "Cicuta",
+      "Oenanthe",
+      "Heracleum"
+    ],
+    "Petroselinum": [
+      "Conium",
+      "Aethusa"
+    ],
+    "Coriandrum": [
+      "Conium",
+      "Aethusa"
+    ],
+    "Anthriscus": [
+      "Conium",
+      "Aethusa"
+    ],
+    "Foeniculum": [
+      "Conium"
+    ],
+    "Apium": [
+      "Oenanthe",
+      "Cicuta"
+    ],
+    "Angelica": [
+      "Cicuta",
+      "Heracleum"
+    ],
+    "Allium": [
+      "Convallaria",
+      "Colchicum",
+      "Arum",
+      "Veratrum"
+    ],
+    "Gentiana": [
+      "Veratrum"
+    ]
+  }
 }

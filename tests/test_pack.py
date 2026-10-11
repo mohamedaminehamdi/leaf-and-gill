@@ -53,3 +53,11 @@ def test_classic_deadly_mixups_raise_the_alarm():
         near = {species[j]["genus"] for j in lookalikes[index[name]]}
         flagged = near & set(danger["genera"])
         assert flagged if genus is None else genus in flagged, f"{name}: no warning ({sorted(near)})"
+
+
+def test_known_lookalikes_point_at_flagged_genera():
+    for genus, dangerous in danger["known_lookalikes"].items():
+        assert genus not in danger["genera"], f"{genus} is itself toxic; list it under genera instead"
+        for d in dangerous:
+            assert d in danger["genera"], f"{genus} -> {d}: {d} has no warning text"
+    assert "Omphalotus" in danger["known_lookalikes"]["Cantharellus"]

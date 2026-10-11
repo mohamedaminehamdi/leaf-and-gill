@@ -1,10 +1,11 @@
 // Offline shell: everything the app needs except the model (app.js caches that itself).
-const SHELL = 'leaf-and-gill-shell-v7';
+const SHELL = 'leaf-and-gill-shell-v10';
 const FILES = [
   './', 'index.html', 'app.js', 'manifest.webmanifest',
   'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',
   'vendor/ort/ort.webgpu.min.mjs', 'vendor/ort/ort-wasm-simd-threaded.asyncify.mjs', 'vendor/ort/ort-wasm-simd-threaded.asyncify.wasm',
   'data/meta.json', 'data/danger.json', 'data/trust.json',
+  'examples/flyagaric.jpg', 'examples/hemlock.jpg', 'examples/chanterelle.jpg', 'examples/dandelion.jpg',
 ];
 // Files indexed by species position: cached under their ?v=<pack> URL, never mixed across versions.
 const PACK_FILES = ['species.json', 'text_emb.f16', 'about.json', 'lookalikes.json', 'confused_with.json'];
@@ -12,7 +13,8 @@ const PACK_FILES = ['species.json', 'text_emb.f16', 'about.json', 'lookalikes.js
 async function cacheAll(cache) {
   const meta = await fetch('data/meta.json', { cache: 'no-cache' }).then((r) => r.json());
   const urls = [...FILES, ...PACK_FILES.map((f) => `data/${f}?v=${meta.pack}`)];
-  await Promise.all(urls.map((u) => cache.add(u).catch(() => {})));  // optional files may not exist
+  // cache: 'reload' skips the browser's HTTP cache, so a new version never stores stale files.
+  await Promise.all(urls.map((u) => cache.add(new Request(u, { cache: 'reload' })).catch(() => {})));  // optional files may not exist
 }
 
 self.addEventListener('install', (event) => {
@@ -40,7 +42,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(caches.open(SHELL).then(async (cache) => {
     // Versioned pack files must match exactly; everything else ignores ?query noise.
     const cached = await cache.match(event.request, { ignoreSearch: !url.search.startsWith('?v=') });
-    const fresh = fetch(event.request).then((res) => {
+    const fresh = fetch(new Request(event.request, { cache: 'no-cache' })).then((res) => {
       if (res.ok) cache.put(event.request, res.clone());
       return res;
     }).catch(() => cached);
