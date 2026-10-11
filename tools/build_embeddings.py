@@ -6,6 +6,7 @@ Reads app/data/species.json, writes:
   app/data/lookalikes.json    for each species, the 10 nearest species of the same kingdom, other genus (indices)
   app/data/meta.json          embedding size, species count, the model's logit scale
 """
+import hashlib
 import json
 from pathlib import Path
 
@@ -53,7 +54,10 @@ def main():
     emb = np.concatenate(chunks)
     emb.astype("<f2").tofile(DATA / "text_emb.f16")
     (DATA / "lookalikes.json").write_text(json.dumps(lookalikes(emb, species), separators=(",", ":")))
-    meta = {"dim": int(emb.shape[1]), "count": len(species), "logit_scale": round(float(model.logit_scale.exp()), 4)}
+    # Every file indexed by species position is fetched as ?v=<pack>, so a browser can never mix
+    # a new species list with an old embeddings file from its HTTP cache.
+    pack = hashlib.sha1((DATA / "species.json").read_bytes()).hexdigest()[:12]
+    meta = {"dim": int(emb.shape[1]), "count": len(species), "logit_scale": round(float(model.logit_scale.exp()), 4), "pack": pack}
     (DATA / "meta.json").write_text(json.dumps(meta))
     print(f"{len(species)} species -> text_emb.f16 ({emb.shape[1]}-d, {emb.nbytes / 2e6:.1f} MB) + lookalikes.json")
 

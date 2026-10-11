@@ -30,15 +30,24 @@ function halfToFloat(u16) {
 }
 
 async function loadPack() {
-  const [species, meta, danger, emb] = await Promise.all([
-    fetch('data/species.json').then((r) => r.json()),
-    fetch('data/meta.json').then((r) => r.json()),
+  // meta.json names the pack version; every file indexed by species position is fetched with it,
+  // so a cached old file can never be paired with a new species list.
+  const meta = await fetch('data/meta.json', { cache: 'no-cache' }).then((r) => r.json());
+  const v = `?v=${meta.pack}`;
+  const [species, danger, emb] = await Promise.all([
+    fetch(`data/species.json${v}`).then((r) => r.json()),
     fetch('data/danger.json').then((r) => r.json()),
-    fetch('data/text_emb.f16').then((r) => r.arrayBuffer()),
+    fetch(`data/text_emb.f16${v}`).then((r) => r.arrayBuffer()),
   ]);
+  const text = halfToFloat(new Uint16Array(emb));
+  if (species.length !== meta.count || text.length !== meta.count * meta.dim) {
+    throw new Error('The species pack is out of date. Reload the page while online.');
+  }
   const optional = (f) => fetch(f).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-  const [about, lookalikes, trust, confused] = await Promise.all(['about', 'lookalikes', 'trust', 'confused_with'].map((f) => optional(`data/${f}.json`)));
-  return { species, meta, danger, about, lookalikes, trust, confused, text: halfToFloat(new Uint16Array(emb)) };
+  const [about, lookalikes, confused, trust] = await Promise.all([
+    optional(`data/about.json${v}`), optional(`data/lookalikes.json${v}`), optional(`data/confused_with.json${v}`), optional('data/trust.json'),
+  ]);
+  return { species, meta, danger, about, lookalikes, trust, confused, text };
 }
 
 // ---------- model (downloaded once, then offline) ----------
