@@ -1,14 +1,14 @@
 // Offline shell: everything the app needs except the model (app.js caches that itself).
-const SHELL = 'leaf-and-gill-shell-v10';
+const SHELL = 'leaf-and-gill-shell-v12';
 const FILES = [
   './', 'index.html', 'app.js', 'manifest.webmanifest',
   'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',
   'vendor/ort/ort.webgpu.min.mjs', 'vendor/ort/ort-wasm-simd-threaded.asyncify.mjs', 'vendor/ort/ort-wasm-simd-threaded.asyncify.wasm',
   'data/meta.json', 'data/danger.json', 'data/trust.json',
-  'examples/flyagaric.jpg', 'examples/hemlock.jpg', 'examples/chanterelle.jpg', 'examples/dandelion.jpg',
+  'examples/flyagaric.jpg', 'examples/hemlock.jpg', 'examples/chanterelle.jpg', 'examples/dandelion.jpg', 'examples/bg.jpg',
 ];
 // Files indexed by species position: cached under their ?v=<pack> URL, never mixed across versions.
-const PACK_FILES = ['species.json', 'text_emb.f16', 'about.json', 'lookalikes.json', 'confused_with.json'];
+const PACK_FILES = ['species.json', 'text_emb.f16', 'about.json', 'lookalikes.json', 'confused_with.json', 'examples.json'];
 
 async function cacheAll(cache) {
   const meta = await fetch('data/meta.json', { cache: 'no-cache' }).then((r) => r.json());

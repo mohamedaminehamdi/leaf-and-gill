@@ -3,201 +3,194 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Name any wild plant, tree or mushroom offline, anywhere. Open-source AI that runs on your phone and warns about deadly look-alikes.">
-<meta name="theme-color" content="#070a08" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#f6f8f4" media="(prefers-color-scheme: light)">
+<meta name="description" content="Name any wild plant, tree or mushroom offline, anywhere. Open-source AI on your phone that warns about deadly look-alikes.">
+<meta name="theme-color" content="#0a0f0b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Leaf &amp; Gill">
 <meta property="og:title" content="Leaf &amp; Gill: offline plant and mushroom ID">
 <meta property="og:description" content="Open-source AI on your phone. No signal, no upload, warns about deadly look-alikes.">
-<meta property="og:image" content="https://mohamedaminehamdi.github.io/leaf-and-gill/icons/icon-512.png">
-<title>Leaf &amp; Gill: offline plant &amp; mushroom ID</title>
+<meta property="og:image" content="https://raw.githubusercontent.com/mohamedaminehamdi/leaf-and-gill/main/docs/cover.png">
+<title>Leaf &amp; Gill</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <style>
   :root {
-    color-scheme: dark light;
-    --bg: #070a08; --surface: #0e1310; --surface-2: #151c17; --border: rgba(255, 255, 255, .08); --border-2: rgba(255, 255, 255, .14);
-    --text: #ecf2ed; --muted: #98a69c; --accent: #5eea8a; --accent-ink: #03200e; --glow: rgba(94, 234, 138, .14);
-    --danger: #ff7a6b; --danger-bg: rgba(255, 122, 107, .09); --warn: #f6c35b; --warn-bg: rgba(246, 195, 91, .08);
-    --radius: 20px;
-  }
-  @media (prefers-color-scheme: light) {
-    :root {
-      --bg: #f6f8f4; --surface: #ffffff; --surface-2: #eef2ec; --border: rgba(10, 30, 15, .1); --border-2: rgba(10, 30, 15, .18);
-      --text: #0c1610; --muted: #4d5c52; --accent: #15803d; --accent-ink: #ffffff; --glow: rgba(21, 128, 61, .10);
-      --danger: #b42318; --danger-bg: #fdeeec; --warn: #8a5a00; --warn-bg: #fff7e3;
-    }
+    --night: #0a0f0b; --ink: #1d231c; --paper: #f5f1e8; --paper-2: #ebe5d8; --rule: rgba(29, 35, 28, .12);
+    --muted: #5d6658; --moss: #3f6b1c; --lichen: #c6e86b; --danger: #b42318; --danger-bg: #fbe9e6; --warn: #8a5300; --warn-bg: #fbf0d9;
+    --serif: ui-serif, "New York", "Iowan Old Style", "Palatino", Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, sans-serif;
   }
   * { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; scroll-padding-top: 16px; }
-  body {
-    margin: 0; min-height: 100vh; color: var(--text); background: var(--bg);
-    background-image: radial-gradient(900px 480px at 50% -120px, var(--glow), transparent 70%);
-    font: 17px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, sans-serif;
-    -webkit-font-smoothing: antialiased; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
-  }
-  main { max-width: 620px; margin: 0 auto; padding: 18px 16px 56px; }
-  a { color: inherit; }
-  :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
+  html { -webkit-text-size-adjust: 100%; background: var(--night); }
+  body { margin: 0; min-height: 100svh; background: var(--night); color: #fff; font: 17px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; }
+  :focus-visible { outline: 3px solid var(--lichen); outline-offset: 3px; border-radius: 10px; }
+  [hidden] { display: none !important; }
 
-  /* top bar */
-  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 36px; }
-  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -.02em; font-size: 19px; }
-  .brand img { width: 34px; height: 34px; border-radius: 10px; }
-  .pill { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--muted);
-    border: 1px solid var(--border); border-radius: 999px; padding: 5px 11px; background: var(--surface); white-space: nowrap; }
-  .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
-  .pill.ok { color: var(--accent); } .pill.ok::before { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+  /* top bar, floating over the photo */
+  .bar { position: fixed; inset: 0 0 auto; z-index: 5; display: flex; align-items: center; gap: 8px;
+    padding: calc(env(safe-area-inset-top) + 12px) 16px 12px; background: linear-gradient(rgba(10,15,11,.75), transparent); }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; letter-spacing: -.01em; margin-right: auto; }
+  .brand img { width: 28px; height: 28px; border-radius: 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; padding: 5px 10px;
+    border-radius: 999px; background: rgba(255,255,255,.12); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); white-space: nowrap; }
+  .chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #aaa; }
+  .chip[data-state=ok]::before { background: var(--lichen); box-shadow: 0 0 8px var(--lichen); }
+  .chip[data-state=loading]::before { background: #f5c463; }
+  .chip[data-state=warn]::before { background: #f5c463; } .chip[data-state=error]::before { background: #ff7a6b; }
+  .icon { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 50%; color: #fff;
+    background: rgba(255,255,255,.12); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); cursor: pointer; }
+  .icon svg { width: 18px; height: 18px; }
 
-  /* hero */
-  .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
-  h1 { font-size: clamp(34px, 9vw, 52px); line-height: 1.02; letter-spacing: -.045em; margin: 10px 0 14px; font-weight: 800; }
-  h1 span { color: var(--accent); }
-  .lede { color: var(--muted); font-size: 18px; margin: 0 0 26px; max-width: 34em; }
-  .snap { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 68px; border-radius: 18px;
-    background: var(--accent); color: var(--accent-ink); font-size: 19px; font-weight: 750; cursor: pointer;
-    box-shadow: 0 10px 30px -10px var(--accent); transition: transform .15s ease; }
-  .snap:active { transform: scale(.98); }
-  .snap[aria-disabled="true"] { opacity: .45; pointer-events: none; box-shadow: none; }
-  .snap svg { width: 24px; height: 24px; }
+  /* home: a viewfinder */
+  #home { position: relative; isolation: isolate; min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 0 20px calc(env(safe-area-inset-bottom) + 26px); overflow: hidden; }
+  #home .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; transform: scale(1.12); filter: blur(5px) saturate(1.15) brightness(.9); }
+  #home::before { content: ""; position: absolute; inset: 0; z-index: -1;
+    background: linear-gradient(180deg, rgba(10,15,11,.35) 0%, rgba(10,15,11,.1) 35%, rgba(10,15,11,.82) 72%, var(--night) 100%); }
+  .finder { position: absolute; left: 50%; top: 40%; width: min(64vw, 280px); aspect-ratio: 1; transform: translate(-50%, -50%); pointer-events: none; }
+  .finder i { position: absolute; width: 34px; height: 34px; border: 3px solid rgba(255,255,255,.9); }
+  .finder i:nth-child(1) { top: 0; left: 0; border-right: 0; border-bottom: 0; border-radius: 14px 0 0 0; }
+  .finder i:nth-child(2) { top: 0; right: 0; border-left: 0; border-bottom: 0; border-radius: 0 14px 0 0; }
+  .finder i:nth-child(3) { bottom: 0; left: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 14px; }
+  .finder i:nth-child(4) { bottom: 0; right: 0; border-left: 0; border-top: 0; border-radius: 0 0 14px 0; }
+  h1 { font: 600 clamp(30px, 8vw, 40px)/1.08 var(--serif); letter-spacing: -.01em; margin: 0 0 6px; text-align: center; }
+  #hint { margin: 0 auto 22px; color: rgba(255,255,255,.78); text-align: center; max-width: 22em; font-size: 16px; }
+  .try { display: flex; justify-content: center; gap: 12px; margin-bottom: 22px; }
+  .try button { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 0; border: 0; background: none; color: rgba(255,255,255,.85);
+    font-size: 12px; cursor: pointer; }
+  .try img { width: 58px; height: 58px; border-radius: 18px; object-fit: cover; border: 2px solid rgba(255,255,255,.35); }
+  .try button:hover img { border-color: var(--lichen); }
+  body:not(.ready) .try { opacity: .4; pointer-events: none; }
+  .shutter { display: grid; place-items: center; width: 84px; height: 84px; margin: 0 auto; border-radius: 50%; border: 4px solid #fff;
+    background: transparent; cursor: pointer; transition: transform .12s; }
+  .shutter span { width: 66px; height: 66px; border-radius: 50%; background: #fff; display: grid; place-items: center; color: var(--night); }
+  .shutter svg { width: 28px; height: 28px; }
+  .shutter:active { transform: scale(.94); }
+  .shutter-label { display: block; text-align: center; margin-top: 10px; font-size: 13px; color: rgba(255,255,255,.7); }
   input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; }
-  .try { display: flex; align-items: center; gap: 10px; margin-top: 16px; flex-wrap: wrap; color: var(--muted); font-size: 14px; }
-  .examples { display: flex; gap: 10px; }
-  .examples button { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 0; border: 0; background: none;
-    color: var(--muted); font: inherit; font-size: 12px; cursor: pointer; }
-  .examples button img { width: 54px; height: 54px; border-radius: 16px; object-fit: cover; border: 1px solid var(--border-2); }
-  .examples button:disabled { opacity: .45; cursor: default; }
-  .examples button:not(:disabled):hover img { border-color: var(--accent); }
 
-  /* setup */
-  .panel, .setup, .hero-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
-  .setup { margin-top: 22px; padding: 16px 18px; }
-  .setup b { font-size: 15px; } .setup p { margin: 4px 0 12px; color: var(--muted); font-size: 14px; }
-  .track { height: 8px; border-radius: 8px; background: var(--surface-2); overflow: hidden; }
-  .track i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s ease; }
-  #setup-text { display: block; margin-top: 8px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .status { min-height: 22px; margin: 14px 2px 0; color: var(--muted); font-size: 15px; }
+  /* result: photo + field-guide page */
+  #result { min-height: 100svh; background: var(--paper); color: var(--ink); }
+  .shot { position: relative; height: 46svh; min-height: 260px; background: var(--night); }
+  .shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .sheet { position: relative; margin-top: -26px; border-radius: 26px 26px 0 0; background: var(--paper); padding: 24px 20px 120px; max-width: 680px; margin-left: auto; margin-right: auto; }
+  .waiting { color: var(--muted); font-size: 16px; margin: 6px 0; }
+  .species { font: 600 clamp(32px, 9vw, 42px)/1.05 var(--serif); letter-spacing: -.01em; margin: 6px 0 4px; }
+  .latin { display: block; font: italic 16px/1.4 var(--serif); color: var(--muted); margin: 0; }
+  .tag { display: inline-block; font: 800 10.5px/1.6 var(--sans); letter-spacing: .05em; font-style: normal; color: var(--danger);
+    border: 1.5px solid currentColor; border-radius: 6px; padding: 0 5px; margin-left: 6px; vertical-align: 2px; }
+  .alert { display: block; border-radius: 14px; padding: 11px 14px; margin: 0 0 10px; font-size: 15px; font-weight: 600; }
+  .alert.danger { background: var(--danger-bg); color: var(--danger); }
+  .alert.danger summary { cursor: pointer; list-style: none; }
+  .alert.danger summary::-webkit-details-marker { display: none; }
+  .alert.danger summary::after { content: " · why"; font-weight: 500; opacity: .75; }
+  .alert.danger[open] summary::after { content: ""; }
+  .alert.danger p { font-weight: 400; margin: 8px 0 0; }
+  .alert.warn { background: var(--warn-bg); color: var(--warn); }
+  .verdict { display: grid; grid-template-columns: auto 1fr; gap: 0 10px; align-items: baseline; margin: 18px 0 10px; padding: 14px 16px;
+    border-radius: 16px; background: var(--paper-2); }
+  .verdict b { font-size: 18px; } .verdict span { color: var(--muted); font-weight: 600; }
+  .verdict small { grid-column: 1 / -1; color: var(--muted); font-size: 14px; margin-top: 2px; }
+  .verdict.confident b { color: var(--moss); } .verdict.likely b { color: var(--warn); } .verdict.unsure b { color: var(--muted); }
+  .verdict b::before { content: "●"; margin-right: 8px; font-size: 13px; vertical-align: 2px; }
+  .fold { border-top: 1px solid var(--rule); }
+  .fold summary { display: flex; justify-content: space-between; align-items: center; padding: 15px 2px; font-weight: 650; cursor: pointer; list-style: none; }
+  .fold summary::-webkit-details-marker { display: none; }
+  .fold summary::after { content: "+"; font-size: 22px; font-weight: 400; color: var(--muted); line-height: 1; }
+  .fold[open] summary::after { content: "–"; }
+  .fold > div { padding: 0 2px 16px; color: #3a4237; font-size: 15.5px; }
+  .fold p { margin: 0 0 8px; } .src, .src a { color: var(--muted); font-size: 13px; }
+  .count { margin-left: auto; margin-right: 12px; color: var(--muted); font-weight: 500; }
+  .list { list-style: none; margin: 0; padding: 0; }
+  .list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--rule); }
+  .list li:first-child { border-top: 0; } .list li > span, .list li { flex-wrap: wrap; }
+  .list .latin { font-size: 14px; width: 100%; } .list b { font-variant-numeric: tabular-nums; }
+  .meta { color: var(--muted); font-size: 13px; margin: 18px 0 0; text-align: center; }
+  .actions { position: fixed; inset: auto 0 0; z-index: 4; display: flex; gap: 10px; padding: 12px 16px calc(env(safe-area-inset-bottom) + 12px);
+    background: linear-gradient(rgba(245,241,232,0), var(--paper) 30%); max-width: 680px; margin: 0 auto; }
+  .btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 54px; border-radius: 16px; border: 0;
+    font-weight: 700; cursor: pointer; }
+  .btn.primary { background: var(--ink); color: var(--paper); }
+  .btn.secondary { background: var(--paper-2); color: var(--ink); flex: .6; }
+  .btn:disabled { color: var(--moss); }
+  .btn svg { width: 20px; height: 20px; }
+  .back { position: absolute; top: calc(env(safe-area-inset-top) + 60px); left: 16px; }
+  body[data-screen=home] #result, body[data-screen=home] .actions { display: none; }
+  body[data-screen=result] #home { display: none; }
 
-  /* result */
-  #result { margin-top: 18px; }
-  .banner { border-radius: 16px; padding: 14px 16px; margin-bottom: 12px; font-size: 15px; }
-  .banner b { display: block; font-size: 16px; margin-bottom: 2px; }
-  .banner p { margin: 6px 0 0; } .banner p span { opacity: .8; }
-  .banner.danger { background: var(--danger-bg); color: var(--danger); border: 1px solid currentColor; }
-  .banner.warn { background: var(--warn-bg); color: var(--warn); border: 1px solid transparent; }
-  .hero-card { overflow: hidden; }
-  .photo { display: block; width: 100%; max-height: 340px; object-fit: cover; }
-  .hero-body { padding: 18px 18px 20px; }
-  .hero-body .eyebrow { color: var(--muted); font-size: 12px; }
-  h2 { font-size: 30px; line-height: 1.1; letter-spacing: -.03em; margin: 6px 0 2px; }
-  .sci { color: var(--muted); font-style: italic; font-size: 15px; margin: 0; }
-  .tag { display: inline-block; font-style: normal; font-size: 11px; font-weight: 800; letter-spacing: .04em; color: var(--danger);
-    border: 1px solid currentColor; border-radius: 6px; padding: 0 5px; margin-left: 6px; vertical-align: 2px; }
-  .trust { display: flex; gap: 12px; align-items: flex-start; margin: 16px 0 4px; padding: 12px 14px; border-radius: 14px; background: var(--surface-2); font-size: 15px; }
-  .trust i { flex: none; width: 10px; height: 10px; border-radius: 50%; margin-top: 7px; background: var(--muted); }
-  .trust.confident i { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
-  .trust.likely i { background: var(--warn); }
-  .trust small { display: block; color: var(--muted); font-size: 13.5px; margin-top: 2px; }
-  .about { margin: 14px 0 0; color: var(--muted); font-size: 15px; }
-  .about a { font-weight: 600; }
-  .look { margin: 12px 0 0; font-size: 15px; }
-  .look span { display: block; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
-  .panel { margin-top: 12px; padding: 14px 16px; }
-  .panel h3 { margin: 0 0 4px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-  ol.others { list-style: none; margin: 0; padding: 0; }
-  ol.others li { border-top: 1px solid var(--border); } ol.others li:first-child { border-top: 0; }
-  ol.others summary { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 12px 0; cursor: pointer; list-style: none; }
-  ol.others summary::-webkit-details-marker { display: none; }
-  .name { display: flex; flex-direction: column; } .name .sci { font-size: 14px; }
-  .pct { font-weight: 700; font-variant-numeric: tabular-nums; align-self: center; color: var(--muted); }
-  .bar { grid-column: 1 / -1; height: 4px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
-  .bar i { display: block; height: 100%; background: var(--muted); }
-  ol.others details[open] { padding-bottom: 12px; }
-  .ghost { width: 100%; min-height: 54px; margin-top: 12px; border-radius: 16px; border: 1px solid var(--border-2);
-    background: transparent; color: var(--text); font: inherit; font-weight: 650; cursor: pointer; }
-  .ghost:disabled { color: var(--accent); border-color: var(--accent); }
-  .meta { color: var(--muted); font-size: 13px; text-align: center; margin: 12px 0 0; }
-
-  /* finds */
-  #finds summary { display: flex; justify-content: space-between; align-items: center; cursor: pointer; list-style: none; }
-  #finds summary span { color: var(--muted); font-size: 14px; }
-  ul.finds { list-style: none; margin: 10px 0 0; padding: 0; }
-  ul.finds li { display: flex; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid var(--border); }
-  ul.finds img { border-radius: 12px; object-fit: cover; }
-  ul.finds span { display: flex; flex-direction: column; }
-
-  /* why */
-  .why { display: grid; gap: 10px; margin-top: 40px; }
-  .why div { display: flex; gap: 14px; padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; }
-  .why svg { flex: none; width: 26px; height: 26px; color: var(--accent); margin-top: 2px; }
-  .why b { display: block; } .why p { margin: 2px 0 0; color: var(--muted); font-size: 15px; }
-  footer { color: var(--muted); font-size: 13px; margin-top: 32px; text-align: center; line-height: 1.7; }
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+  /* dialogs */
+  dialog { width: min(560px, calc(100% - 24px)); max-height: 82svh; border: 0; border-radius: 24px; padding: 22px 20px; background: var(--paper); color: var(--ink); }
+  dialog::backdrop { background: rgba(10,15,11,.6); backdrop-filter: blur(4px); }
+  dialog h2 { font: 600 26px/1.1 var(--serif); margin: 0 0 10px; }
+  dialog p { color: #3a4237; font-size: 15.5px; } dialog a { color: var(--moss); }
+  dialog .close { float: right; border: 0; background: var(--paper-2); width: 34px; height: 34px; border-radius: 50%; cursor: pointer; color: var(--ink); }
+  #finds-list { list-style: none; margin: 8px 0 14px; padding: 0; }
+  #finds-list li { display: flex; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid var(--rule); }
+  #finds-list img { border-radius: 12px; object-fit: cover; } #finds-list .empty { color: var(--muted); border: 0; }
+  .credits { font-size: 13px !important; color: var(--muted) !important; }
+  @media (min-width: 900px) {
+    body[data-screen=result] #result { display: grid; grid-template-columns: 1fr 1fr; }
+    .shot { height: 100svh; position: sticky; top: 0; } .sheet { margin: 0; border-radius: 0; padding-top: 90px; }
+    .actions { left: 50%; right: 0; margin: 0; max-width: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
-<body>
-<main>
-  <header class="top">
-    <div class="brand"><img src="icons/icon.svg" alt="" width="34" height="34">Leaf &amp; Gill</div>
-    <span class="pill" id="mode">Setting up</span>
+<body data-screen="home">
+  <header class="bar">
+    <div class="brand"><img src="icons/icon.svg" alt="" width="28" height="28">Leaf &amp; Gill</div>
+    <span class="chip" id="mode" data-state="loading" role="status" aria-live="polite">Loading</span>
+    <button class="icon" id="open-finds" type="button" aria-label="My finds"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 4h14v17l-7-4-7 4z"/></svg></button>
+    <button class="icon" id="open-info" type="button" aria-label="About Leaf &amp; Gill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg></button>
   </header>
 
-  <div class="eyebrow">Offline field guide · open-source AI</div>
-  <h1>Name any plant, tree or mushroom. <span>No signal needed.</span></h1>
-  <p class="lede">Snap a photo and it's identified on your phone, offline. It warns you about deadly look-alikes and tells you when it isn't sure.</p>
+  <main>
+    <section id="home">
+      <img class="bg" src="examples/bg.jpg" alt="">
+      <div class="finder" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <h1>What's growing here?</h1>
+      <p id="hint">Snap a leaf, tree or mushroom. Works offline, warns about deadly look-alikes.</p>
+      <div class="try" aria-label="Try an example">
+        <button type="button" data-example="examples/flyagaric.jpg"><img src="examples/flyagaric.jpg" alt="">Fly agaric</button>
+        <button type="button" data-example="examples/hemlock.jpg"><img src="examples/hemlock.jpg" alt="">Hemlock</button>
+        <button type="button" data-example="examples/chanterelle.jpg"><img src="examples/chanterelle.jpg" alt="">Chanterelle</button>
+        <button type="button" data-example="examples/dandelion.jpg"><img src="examples/dandelion.jpg" alt="">Dandelion</button>
+      </div>
+      <label class="shutter" for="camera" aria-label="Take or choose a photo"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="4"/></svg></span></label>
+      <span class="shutter-label">Photos never leave your phone</span>
+    </section>
 
-  <label class="snap" for="camera" data-needs-model aria-disabled="true">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="4"/></svg>
-    Identify a photo
-  </label>
+    <section id="result" aria-live="polite">
+      <div class="shot"><img id="shot" alt="Your photo"><button class="icon back" id="back" type="button" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button></div>
+      <div class="sheet" id="sheet"></div>
+    </section>
+  </main>
   <input id="camera" type="file" accept="image/*" capture="environment">
 
-  <div class="try">
-    <span>Or try an example:</span>
-    <div class="examples">
-      <button type="button" data-example="examples/flyagaric.jpg" data-needs-model disabled><img src="examples/flyagaric.jpg" alt="">Fly agaric</button>
-      <button type="button" data-example="examples/hemlock.jpg" data-needs-model disabled><img src="examples/hemlock.jpg" alt="">Hemlock</button>
-      <button type="button" data-example="examples/chanterelle.jpg" data-needs-model disabled><img src="examples/chanterelle.jpg" alt="">Chanterelle</button>
-      <button type="button" data-example="examples/dandelion.jpg" data-needs-model disabled><img src="examples/dandelion.jpg" alt="">Dandelion</button>
-    </div>
+  <div class="actions">
+    <label class="btn primary" for="camera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="4"/></svg>New photo</label>
+    <button class="btn secondary" id="save" type="button" hidden>Save</button>
   </div>
 
-  <div class="setup" id="setup" role="status" aria-live="polite">
-    <b>One-time setup</b>
-    <p>Downloading the open-source model (609 MB). After this, Leaf &amp; Gill works in airplane mode, like offline maps.</p>
-    <div class="track"><i id="setup-bar"></i></div>
-    <span id="setup-text">Starting…</span>
-  </div>
+  <dialog id="finds" aria-label="My finds">
+    <button class="close" type="button" data-close aria-label="Close">✕</button>
+    <h2>My finds</h2>
+    <ul id="finds-list"></ul>
+    <button class="btn secondary" id="clear-finds" type="button" style="width:100%">Clear list</button>
+  </dialog>
 
-  <div class="status" id="status" role="status" aria-live="polite"></div>
-  <div id="result"></div>
-  <div id="finds"></div>
-
-  <section class="why" aria-label="How it works">
-    <div>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l20 20M8.5 16.5a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 5.2-2.8M19 12.9a10 10 0 0 0-2-1.6M2 8.8a15 15 0 0 1 4.2-2.6M22 8.8A15 15 0 0 0 11 5M12 20h.01"/></svg>
-      <span><b>Works with no signal</b><p>BioCLIP 2, an open model trained on 200 million biology photos, runs on your phone. Your photos never leave it.</p></span>
-    </div>
-    <div>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
-      <span><b>Warns about deadly look-alikes</b><p>Death cap, poison hemlock, false morel… even when the photo looks like something harmless.</p></span>
-    </div>
-    <div>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg>
-      <span><b>Knows when it's guessing</b><p>A trust meter, learned with TabPFN on 3,000 fresh photos, says "not sure" instead of bluffing.</p></span>
-    </div>
-  </section>
-
-  <footer>
-    11,896 plants &amp; fungi from <a href="https://www.gbif.org">GBIF</a> · model <a href="https://huggingface.co/imageomics/bioclip-2">BioCLIP 2</a> (MIT) ·
-    trust meter built with <a href="https://github.com/PriorLabs/TabPFN">TabPFN</a> · <a href="https://github.com/mohamedaminehamdi/leaf-and-gill">source code</a><br>
-    Example photos from iNaturalist: fly agaric (CC0), pedrogarabaya (CC BY), Michel Langeveld (CC BY), Álvaro Ibaceta R. (CC BY)<br>
-    <b>Never eat anything based on an app.</b>
-  </footer>
-</main>
+  <dialog id="info" aria-label="About Leaf &amp; Gill">
+    <button class="close" type="button" data-close aria-label="Close">✕</button>
+    <h2>About Leaf &amp; Gill</h2>
+    <p><b>Works with no signal.</b> <a href="https://huggingface.co/imageomics/bioclip-2">BioCLIP 2</a>, an open model trained on 200 million biology photos, runs on your phone. The first visit downloads it once (609 MB); after that it works in airplane mode. Photos never leave the phone.</p>
+    <p><b>Warns about deadly look-alikes.</b> A hand-written list of toxic genera (death cap, poison hemlock, false morel…) is checked against every answer and its known look-alikes.</p>
+    <p><b>Knows when it's guessing.</b> A trust meter learned with <a href="https://github.com/PriorLabs/TabPFN">TabPFN</a> on 3,000 fresh iNaturalist photos says "not sure" instead of bluffing.</p>
+    <p><b>Never eat anything based on an app.</b></p>
+    <p class="credits">11,896 plants &amp; fungi from <a href="https://www.gbif.org">GBIF</a> · descriptions from Wikipedia (CC BY-SA) · example photos from iNaturalist: fly agaric (CC0), pedrogarabaya, Michel Langeveld, Álvaro Ibaceta R. (CC BY) · <a href="https://github.com/mohamedaminehamdi/leaf-and-gill">source code</a> (MIT)</p>
+  </dialog>
 <script type="module" src="app.js"></script>
 </body>
 </html>

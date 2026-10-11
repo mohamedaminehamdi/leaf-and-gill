@@ -229,14 +229,14 @@ def main():
         f"| Separates right from wrong (AUROC, higher is better) | {roc_auc_score(correct[test], p_raw):.3f} | {roc_auc_score(correct[test], p_tabpfn):.3f} |",
         f"| Brier score (lower is better) | {brier(p_raw, correct[test]):.3f} | {brier(p_tabpfn, correct[test]):.3f} |",
         f"| Right answers among the 40% most trusted | {precision_at(p_raw, correct[test]):.1%} | {precision_at(p_tabpfn, correct[test]):.1%} |",
-        f"| Answers shown as "Very likely" | {raw['coverage']:.1%} | {tab['coverage']:.1%} |",
-        f"| "Very likely" answers that were right | {raw['precision']:.1%} | {tab['precision']:.1%} |",
-        f"| Wrong answers shown as "Very likely" | {raw['wrong_shown_confident']} | {tab['wrong_shown_confident']} |",
+        f"| Answers shown as 'Very likely' | {raw['coverage']:.1%} | {tab['coverage']:.1%} |",
+        f"| 'Very likely' answers that were right | {raw['precision']:.1%} | {tab['precision']:.1%} |",
+        f"| Wrong answers shown as 'Very likely' | {raw['wrong_shown_confident']} | {tab['wrong_shown_confident']} |",
         "",
         f"Overall, {correct.mean():.1%} of all photos (including species outside the pack) got the right species as the top match. "
         f"Features: top-1 probability, its margin over the runner-up, top-1 cosine similarity, kingdom.",
         "",
-        f"Both cut-offs were chosen on the training split to keep "Very likely" answers at least 95% right "
+        f"Both cut-offs were chosen on the training split to keep 'Very likely' answers at least 95% right "
         f"(raw score >= {raw_at:.3f}, TabPFN >= {confident_at:.3f}).",
     ]
     Path("metrics.md").write_text("\n".join(lines) + "\n")

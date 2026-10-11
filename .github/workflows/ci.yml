@@ -10,3 +10,5 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       # Offline checks only: the data pack, safety rules and trust table. No model download.
       - run: uv run --only-group dev --with numpy pytest -q
+      # Build scripts must at least parse (they need the model to run, so CI only compiles them).
+      - run: python3 -m py_compile tools/*.py

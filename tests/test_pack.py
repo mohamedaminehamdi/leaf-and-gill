@@ -61,3 +61,8 @@ def test_known_lookalikes_point_at_flagged_genera():
         for d in dangerous:
             assert d in danger["genera"], f"{genus} -> {d}: {d} has no warning text"
     assert "Omphalotus" in danger["known_lookalikes"]["Cantharellus"]
+
+
+def test_every_danger_genus_has_a_plain_name():
+    missing = set(danger["genera"]) - set(danger["labels"])
+    assert not missing, f"no hiker-friendly name for {sorted(missing)}"

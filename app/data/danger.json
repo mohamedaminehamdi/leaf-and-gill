@@ -160,5 +160,35 @@
     "Gentiana": [
       "Veratrum"
     ]
+  },
+  "labels": {
+    "Amanita": "death cap & destroying angels",
+    "Galerina": "deadly galerina",
+    "Lepiota": "deadly dapperlings",
+    "Conocybe": "deadly conecap",
+    "Cortinarius": "deadly webcaps",
+    "Gyromitra": "false morel",
+    "Clitocybe": "fool's funnel",
+    "Inocybe": "fibrecaps",
+    "Inosperma": "fibrecaps",
+    "Omphalotus": "jack-o'-lantern",
+    "Paxillus": "brown roll-rim",
+    "Conium": "poison hemlock",
+    "Cicuta": "water hemlock",
+    "Oenanthe": "hemlock water-dropwort",
+    "Aconitum": "monkshood",
+    "Atropa": "deadly nightshade",
+    "Digitalis": "foxglove",
+    "Taxus": "yew",
+    "Nerium": "oleander",
+    "Datura": "jimsonweed",
+    "Ricinus": "castor bean",
+    "Veratrum": "false hellebore",
+    "Toxicodendron": "poison ivy & poison oak",
+    "Heracleum": "giant hogweed",
+    "Aethusa": "fool's parsley",
+    "Convallaria": "lily of the valley",
+    "Colchicum": "autumn crocus",
+    "Arum": "lords-and-ladies"
   }
 }
